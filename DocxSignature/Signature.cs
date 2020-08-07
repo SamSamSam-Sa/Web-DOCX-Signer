@@ -1,53 +1,44 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
-using DocumentFormat.OpenXml;
-using System.Security.Cryptography;
-using DocumentFormat.OpenXml.Office.CustomUI;
 
-namespace Paste_to_word
+namespace DocxSignature
 {
-    class Signature
+    public class Signature
     {
-        public static void PasteToFooter(String documentPath)
+        const string PRIMARY_COLOR = "5f487c";
+        private UInt32Value BorderSize { get; } = UInt32Value.ToUInt32(25);
+        private EnumValue<BorderValues> GetBorderVal() => new EnumValue<BorderValues>(BorderValues.Thick);
+
+        public void SignDocument(string documentPath, string firstSignerName, string secondSignerName = null)
         {
-            // Replace header in target document with header of source document.
-            using (WordprocessingDocument document = WordprocessingDocument.Open(documentPath, true))
+            var signFooter = CreateSignFooter(firstSignerName, secondSignerName);
+            PasteToFooter(documentPath, signFooter);
+        }
+
+        public void PasteToFooter(string documentPath, Footer footer)
+        {
+            using (var document = WordprocessingDocument.Open(documentPath, true))
             {
-                // Get the main document part
-                MainDocumentPart mainDocumentPart = document.MainDocumentPart;
+                var mainDocumentPart = document.MainDocumentPart;
+                mainDocumentPart.DeleteParts(mainDocumentPart.FooterParts);
 
-                // Delete the existing footer parts
-                 mainDocumentPart.DeleteParts(mainDocumentPart.FooterParts);
+                var footerPart = mainDocumentPart.AddNewPart<FooterPart>();                    
+                footerPart.Footer = footer;
 
-                // Create a newfooter part
-                FooterPart footerPart = mainDocumentPart.AddNewPart<FooterPart>();
-
-                // Get Id of the footer parts
-                string footerPartId = mainDocumentPart.GetIdOfPart(footerPart);
-
-                CreateFooterPartContent(footerPart);
-
-                // Get SectionProperties and ReplaceFooterRefernce with new Id
-                IEnumerable<SectionProperties> sections = mainDocumentPart.Document.Body.Elements<SectionProperties>();
+                var sections = mainDocumentPart.Document.Body.Elements<SectionProperties>();
 
                 foreach (var section in sections)
                 {
-                    // Delete existing references to footers
                     section.RemoveAllChildren<FooterReference>();
-
-                    // Create the new footer reference node
-                    section.PrependChild<FooterReference>(new FooterReference() { Id = footerPartId });
+                    section.PrependChild(new FooterReference() { Id = mainDocumentPart.GetIdOfPart(footerPart) });
                 }
             }
-        }
+        }        
 
-        private static void CreateFooterPartContent(FooterPart part)
+        private Footer CreateSignFooter(string firstSignerName, string secondSignerName = null)
         {
-            Footer footer = new Footer() { MCAttributes = new MarkupCompatibilityAttributes() { Ignorable = "w14 wp14" } };
+            var footer = new Footer() { MCAttributes = new MarkupCompatibilityAttributes() { Ignorable = "w14 wp14" } };
             footer.AddNamespaceDeclaration("wpc", "http://schemas.microsoft.com/office/word/2010/wordprocessingCanvas");
             footer.AddNamespaceDeclaration("mc", "http://schemas.openxmlformats.org/markup-compatibility/2006");
             footer.AddNamespaceDeclaration("o", "urn:schemas-microsoft-com:office:office");
@@ -64,49 +55,44 @@ namespace Paste_to_word
             footer.AddNamespaceDeclaration("wne", "http://schemas.microsoft.com/office/word/2006/wordml");
             footer.AddNamespaceDeclaration("wps", "http://schemas.microsoft.com/office/word/2010/wordprocessingShape");
 
-            //Table signatures = CreateSignatures("SamohinaAI");
-            Table signatures = CreateSignatures("SamohinaAI", "BessonovVA");
+            var signatureTable = string.IsNullOrEmpty(secondSignerName) 
+                ? CreateSignatures(firstSignerName)
+                : CreateSignatures(firstSignerName, secondSignerName);
+            footer.Append(signatureTable);
 
-            footer.Append(signatures);
-
-            part.Footer = footer;
+            return footer;
         }
 
-        const string PRIMARY_COLOR = "5f487c";
-        private static UInt32Value GetBorderSize () => UInt32Value.ToUInt32(25);
-        private static EnumValue<BorderValues> GetBorderVal  () => new EnumValue<BorderValues>(BorderValues.Thick);
-
-
-        public static TableProperties GetTableProperties()
-        {            
+        public TableProperties GetTableProperties()
+        {
             return new TableProperties(
                 new TableBorders(
                     new TopBorder()
                     {
                         Val =
                         GetBorderVal(),
-                        Size = GetBorderSize(),
+                        Size = BorderSize,
                         Color = PRIMARY_COLOR
                     },
                     new BottomBorder()
                     {
                         Val =
                         GetBorderVal(),
-                        Size = GetBorderSize(),
+                        Size = BorderSize,
                         Color = PRIMARY_COLOR
                     },
                     new LeftBorder()
                     {
                         Val =
                         GetBorderVal(),
-                        Size = GetBorderSize(),
+                        Size = BorderSize,
                         Color = PRIMARY_COLOR
                     },
                     new RightBorder()
                     {
                         Val =
                         GetBorderVal(),
-                        Size = GetBorderSize(),
+                        Size = BorderSize,
                         Color = PRIMARY_COLOR
                     }
                 ),
@@ -116,7 +102,7 @@ namespace Paste_to_word
                 }
             );
         }
-        private static TableCellProperties GetEmptyCellProperties()
+        private TableCellProperties GetEmptyCellProperties()
         {
             return new TableCellProperties(
                 new TableCellWidth()
@@ -124,7 +110,6 @@ namespace Paste_to_word
                     Type = TableWidthUnitValues.Dxa,
                     Width = "3000"
                 },
-                //new FitText(),
                 new TableCellBorders(
                     new TopBorder()
                     {
@@ -139,19 +124,19 @@ namespace Paste_to_word
                     new LeftBorder()
                     {
                         Val = GetBorderVal(),
-                        Size = GetBorderSize(),
+                        Size = BorderSize,
                         Color = PRIMARY_COLOR
                     },
                     new RightBorder()
                     {
                         Val = GetBorderVal(),
-                        Size = GetBorderSize(),
+                        Size = BorderSize,
                         Color = PRIMARY_COLOR
                     })
             );
         }
 
-        private static TableCellProperties GetFilledCellProperties()
+        private TableCellProperties GetFilledCellProperties()
         {
             return new TableCellProperties(
                     new TableCellWidth()
@@ -161,7 +146,7 @@ namespace Paste_to_word
                     });
         }
 
-        private static Paragraph GetCustomParagraph(string text, int size, bool isBold = false)
+        private Paragraph GetCustomParagraph(string text, int size, bool isBold = false)
         {
             Paragraph paragraph1 = new Paragraph();
             ParagraphProperties pPr = new ParagraphProperties
@@ -188,7 +173,7 @@ namespace Paste_to_word
         }
 
         // Insert a table into a word processing document.
-        public static Table CreateSignatures(string login)
+        private Table CreateSignatures(string login)
         {
             // Create an empty table.
             Table signature = new Table();
@@ -224,9 +209,9 @@ namespace Paste_to_word
             return signature;
         }
 
-        
 
-        public static Table CreateSignatures(string login1, string login2)
+
+        private Table CreateSignatures(string login1, string login2)
         {
             // Create an empty table.
             Table signatures = new Table();
@@ -274,4 +259,5 @@ namespace Paste_to_word
         }
 
     }
+
 }
