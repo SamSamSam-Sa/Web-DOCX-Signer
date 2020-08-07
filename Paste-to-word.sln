@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DocxSignatureConsoleApp", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DocxSignature", "DocxSignature\DocxSignature.csproj", "{92491B55-0DDF-4D8A-815C-6D91B4BF5B2A}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "web-docx-signer", "web-docx-signer\web-docx-signer.csproj", "{A172C6C4-A216-4560-82B0-1E472D62300A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{92491B55-0DDF-4D8A-815C-6D91B4BF5B2A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{92491B55-0DDF-4D8A-815C-6D91B4BF5B2A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{92491B55-0DDF-4D8A-815C-6D91B4BF5B2A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A172C6C4-A216-4560-82B0-1E472D62300A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A172C6C4-A216-4560-82B0-1E472D62300A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A172C6C4-A216-4560-82B0-1E472D62300A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A172C6C4-A216-4560-82B0-1E472D62300A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
