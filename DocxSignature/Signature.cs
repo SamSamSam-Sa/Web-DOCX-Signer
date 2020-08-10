@@ -40,7 +40,7 @@ namespace DocxSignature
         private void PasteFooterToDocument(WordprocessingDocument document, Footer footer)
         {
             var mainDocumentPart = document.MainDocumentPart;
-            mainDocumentPart.DeleteParts(mainDocumentPart.FooterParts);
+            //mainDocumentPart.DeleteParts(mainDocumentPart.FooterParts);
 
             var footerPart = mainDocumentPart.AddNewPart<FooterPart>();
             footerPart.Footer = footer;
@@ -49,7 +49,7 @@ namespace DocxSignature
 
             foreach (var section in sections)
             {
-                section.RemoveAllChildren<FooterReference>();
+                //section.RemoveAllChildren<FooterReference>();
                 section.PrependChild(new FooterReference() { Id = mainDocumentPart.GetIdOfPart(footerPart) });
             }
         }
