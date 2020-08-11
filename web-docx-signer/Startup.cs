@@ -1,3 +1,4 @@
+using DocxSignature;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -31,6 +32,7 @@ namespace web_docx_signer
 
             // Register the Swagger generator, defining 1 or more Swagger documents
             services.AddSwaggerGen();
+            services.AddSingleton<ISignature, Signature>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
