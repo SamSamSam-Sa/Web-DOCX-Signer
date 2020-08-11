@@ -21,18 +21,18 @@ namespace web_docx_signer.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddFile(IFormFileCollection uploads)
+        public async Task<IActionResult> AddFile([FromForm]IFormFileCollection uploads, [FromForm] string firstName, [FromForm] string secondName)
         {
             foreach (var uploadedFile in uploads)
             {
                 // путь к папке Files
-                string path = "/Files/" + uploadedFile.FileName;
+                //string path = "/Files/" + uploadedFile.FileName;
                 // сохраняем файл в папку Files в каталоге wwwroot
-                using (var fileStream = new FileStream(_appEnvironment.WebRootPath + path, FileMode.Create))
+                using (var fileStream = new FileStream(uploadedFile.FileName, FileMode.Create))
                 {
                     await uploadedFile.CopyToAsync(fileStream);
                     fileStream.Seek(0, SeekOrigin.Begin);
-                    _signature.SignDocument(fileStream, "ergerger", "ergerger");
+                    _signature.SignDocument(fileStream, firstName, secondName);
                 }
 
             }
