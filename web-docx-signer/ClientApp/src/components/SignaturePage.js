@@ -1,66 +1,70 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Form, Row, Col, Button } from "react-bootstrap";
+import { saveAs } from "file-saver";
 
 const SignaturePage = () => {
   const [isOneSignature, setIsOneSignature] = useState(true);
 
-  // var fileInput = document.getElementById('formHorizontalFileSelect');
-  // var fileList = [];
-
-  // useEffect(() => {
-  //   console.log("TCL: SignaturePage -> fileInput", fileInput)
-  //   fileList = [];
-  //   for (var i = 0; i < fileInput.files.length; i++) {
-
-  //    fileList.push(fileInput.files[i]);
-  //   }
-  // }, [fileInput.files]);
-
-  const sendFile = (fileList) => {
-    var formData = new FormData();
-    var request = new XMLHttpRequest();
-    fileList.forEach((file) => {
-      formData.set("file", file);
+  async function postData(url = "", data = {}) {
+    // Default options are marked with *
+    const response = await fetch(url, {
+      method: "POST", // *GET, POST, PUT, DELETE, etc.
+      mode: "cors", // no-cors, *cors, same-origin
+      cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
+      credentials: "same-origin", // include, *same-origin, omit
+      headers: {
+        "Content-Typexxxx": "multipart/form-data",
+        // 'Content-Type': 'application/json'
+        // 'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      redirect: "follow", // manual, *follow, error
+      referrerPolicy: "no-referrer", // no-referrer, *client
+      body: JSON.stringify(data), // body data type must match "Content-Type" header
     });
-
-    request.open("POST", "./DocumentSignature", true);
-    request.send(formData);
-  };
+    return await response; // parses JSON response into native JavaScript objects
+  }
 
   const hndleSubmitAJAX = async (e) => {
     e.preventDefault();
-    console.log("TCL: hndleSubmitAJAX -> e", e);
-    await sendFile();
-    // const formData = new FormData();
+    const formData = new FormData(e.target);
+
+    let response = await postData("DocumentSignature", formData);
+    console.log("TCL: hndleSubmitAJAX -> response", response);
+    response.blob().then(function (myBlob) {
+    console.log("TCL: hndleSubmitAJAX -> myBlob", myBlob)
+      saveAs(myBlob, "download.zip");
+    });
 
     // var request = new XMLHttpRequest();
-    // request.open("POST", "./DocumentSignature", true);
-    // request.setRequestHeader('Content-Type', 'multipart/form-data');
-
-    // request.upload.addEventListener('progress', function(e) {
-    //   var percent_complete = (e.loaded / e.total)*100;
-    //   console.log(percent_complete);
-    // });
-
-    // // AJAX request finished event
-    // request.addEventListener('load', function(e) {
-    //   // HTTP status message
-    //   console.log(request.status);
-
-    //   // request.response will hold the response from the server
-    //   console.log(request.response);
-    // });
+    // request.open("POST", "DocumentSignature", true);
+    // request.setRequestHeader('Content-Typexxxx', 'multipart/form-data');
 
     // request.send(formData);
+    // request.onload = function() {
+    //   request.response.blob().then(function(myBlob) {
+    //     saveAsFunc(myBlob,'download.zip');
+    //   });
+    //   console.log("TCL: request.onload -> request.response", request.response)
+
+    // };
+    e.target.reset();
+  };
+
+  const saveAsFunc = (responseBody) => {
+    setTimeout(() => {
+      var blob = new Blob([responseBody], { type: "application/zip" });
+      saveAs(blob);
+    }, 2000);
   };
 
   return (
     <Form
-      method="post"
-      enctype="multipart/form-data"
-      action="DocumentSignature"
+      // method="post"
+      // encType="multipart/form-data"
+      // action="DocumentSignature"
+      onSubmit={(e) => hndleSubmitAJAX(e)}
     >
-      <Form.Group as={Row} >
+      <Form.Group as={Row}>
         <Form.Label as="legend" column sm={2}>
           Выберите файлы
         </Form.Label>
@@ -70,21 +74,16 @@ const SignaturePage = () => {
         <Form.Label as="legend" column sm={2}>
           Количество подписей
         </Form.Label>
-        <Col sm={10} as="legend">
+        <Col sm={10}>
           <Form.Check
             type="radio"
             label="Одна печать"
-            name="formHorizontalRadios"
-            checked={isOneSignature}
-            onClick={() => setIsOneSignature(true)}
+            onChange={() => setIsOneSignature(true)}
           />
           <Form.Check
             type="radio"
             label="Две печати"
-            name="formHorizontalRadios"
-            id="formHorizontalRadios2"
-            checked={!isOneSignature}
-            onClick={() => setIsOneSignature(false)}
+            onChange={() => setIsOneSignature(false)}
           />
         </Col>
       </Form.Group>
@@ -93,7 +92,11 @@ const SignaturePage = () => {
           Подпись 1
         </Form.Label>
         <Col sm={10}>
-          <Form.Control type="text" name="firstName" placeholder="Введите текст подписи" />
+          <Form.Control
+            type="text"
+            name="firstName"
+            placeholder="Введите текст подписи"
+          />
         </Col>
       </Form.Group>
       {isOneSignature ? null : (
@@ -102,7 +105,11 @@ const SignaturePage = () => {
             Подпись 2
           </Form.Label>
           <Col sm={10}>
-            <Form.Control type="text" name="secondName" placeholder="Введите текст подписи" />
+            <Form.Control
+              type="text"
+              name="secondName"
+              placeholder="Введите текст подписи"
+            />
           </Col>
         </Form.Group>
       )}

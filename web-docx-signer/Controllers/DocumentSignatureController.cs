@@ -4,6 +4,11 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using DocxSignature;
+using System.IO.Compression;
+using System.Linq;
+using System.Net.Http;
+using System.Net;
+using System.Net.Http.Headers;
 
 namespace web_docx_signer.Controllers
 {
@@ -21,23 +26,62 @@ namespace web_docx_signer.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddFile([FromForm]IFormFileCollection uploads, [FromForm] string firstName, [FromForm] string secondName)
+        public HttpResponseMessage AddFile([FromForm]IFormFileCollection uploads, [FromForm] string firstName, [FromForm] string secondName)
         {
-            foreach (var uploadedFile in uploads)
+            var result = new HttpResponseMessage(HttpStatusCode.OK);
+            using (var archiveMemoryStream = new MemoryStream())
             {
-                // путь к папке Files
-                //string path = "/Files/" + uploadedFile.FileName;
-                // сохраняем файл в папку Files в каталоге wwwroot
-                using (var fileStream = new FileStream(uploadedFile.FileName, FileMode.Create))
+                using (var archive = new ZipArchive(archiveMemoryStream, ZipArchiveMode.Create, true))
                 {
-                    await uploadedFile.CopyToAsync(fileStream);
-                    fileStream.Seek(0, SeekOrigin.Begin);
-                    _signature.SignDocument(fileStream, firstName, secondName);
+                    foreach (var uploadedFile in uploads)
+                    {
+                        using (var fileMemoryStream = new MemoryStream())
+                        {
+                            uploadedFile.CopyTo(fileMemoryStream);
+                            fileMemoryStream.Seek(0, SeekOrigin.Begin);
+                            _signature.SignDocument(fileMemoryStream, firstName, secondName);
+                            fileMemoryStream.Seek(0, SeekOrigin.Begin);
+
+                            var archiveFile = archive.CreateEntry(uploadedFile.FileName);
+                            using (var entryStream = archiveFile.Open())
+                            {
+                                using (var streamWriter = new StreamWriter(entryStream))
+                                {
+                                    fileMemoryStream.CopyTo(entryStream);
+                                }
+                            }
+                        }
+                    }
                 }
+
+                archiveMemoryStream.Seek(0, SeekOrigin.Begin);
+                var content = new StreamContent(archiveMemoryStream);
+                result.Content = content;
+                result.Content.Headers.ContentDisposition =
+                    new ContentDispositionHeaderValue("attachment")
+                    {
+                        FileName = "zip.zip"
+                    };
+                result.Content.Headers.ContentType = new MediaTypeHeaderValue("application/zip");
 
             }
 
-            return Ok();
+            //using(var stream  = new MemoryStream())
+            //{
+            //    uploads[0].CopyTo(stream);
+            //    var content = new StreamContent(stream);
+
+            //    result.Content = content;                
+            //}
+
+            //result.Content.Headers.ContentDisposition =
+            //           new ContentDispositionHeaderValue("attachment")
+            //           {
+            //               FileName = "zip.zip"
+            //           };
+            //result.Content.Headers.ContentType = new MediaTypeHeaderValue("application/zip") ;
+
+            return result;
         }
     }
 }
