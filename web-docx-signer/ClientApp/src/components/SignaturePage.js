@@ -5,21 +5,7 @@ import { saveAs } from "file-saver";
 const SignaturePage = () => {
   const [isOneSignature, setIsOneSignature] = useState(true);
 
-  const getZip = (path) =>{
-    var request = new XMLHttpRequest();
-      request.open("GET", "DocumentSignature"+"?path=" + path, true);
-      request.onload = function() {
-      // request.response.blob().then(function (myBlob) {
-      //   console.log("TCL: hndleSubmitAJAX -> myBlob", myBlob)
-      //   saveAs(myBlob, "download.zip");
-      // });
-      saveAsFunc(request.response);
-      console.log("TCL: request.onload -> request.response", request.response)
-      };    
-      request.send();
-  }
-
-  const hadleSubmitAJAX = (e) => {
+   const hadleSubmitAJAX = (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
 
@@ -28,13 +14,9 @@ const SignaturePage = () => {
     request.setRequestHeader('Content-Typexxxx', 'multipart/form-data');
     request.send(formData);
 
-    request.onload = function() {
-      // request.response.blob().then(function(myBlob) {
-      //   saveAsFunc(myBlob,'download.zip');
-      // });
+    request.onload = function(args) {
+      console.log("TCL: request.onload -> args", args)
       console.log("TCL: request.onload -> request.response1", request.response);
-      getZip(request.response);
-
     };
     e.target.reset();
   };
