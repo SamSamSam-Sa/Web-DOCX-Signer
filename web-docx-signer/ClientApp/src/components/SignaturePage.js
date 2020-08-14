@@ -5,48 +5,37 @@ import { saveAs } from "file-saver";
 const SignaturePage = () => {
   const [isOneSignature, setIsOneSignature] = useState(true);
 
-  async function postData(url = "", data = {}) {
-    // Default options are marked with *
-    const response = await fetch(url, {
-      method: "POST", // *GET, POST, PUT, DELETE, etc.
-      mode: "cors", // no-cors, *cors, same-origin
-      cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
-      credentials: "same-origin", // include, *same-origin, omit
-      headers: {
-        "Content-Typexxxx": "multipart/form-data",
-        // 'Content-Type': 'application/json'
-        // 'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      redirect: "follow", // manual, *follow, error
-      referrerPolicy: "no-referrer", // no-referrer, *client
-      body: JSON.stringify(data), // body data type must match "Content-Type" header
-    });
-    return await response; // parses JSON response into native JavaScript objects
+  const getZip = (path) =>{
+    var request = new XMLHttpRequest();
+      request.open("GET", "DocumentSignature"+"?path=" + path, true);
+      request.onload = function() {
+      // request.response.blob().then(function (myBlob) {
+      //   console.log("TCL: hndleSubmitAJAX -> myBlob", myBlob)
+      //   saveAs(myBlob, "download.zip");
+      // });
+      saveAsFunc(request.response);
+      console.log("TCL: request.onload -> request.response", request.response)
+      };    
+      request.send();
   }
 
-  const hndleSubmitAJAX = async (e) => {
+  const hadleSubmitAJAX = (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
 
-    let response = await postData("DocumentSignature", formData);
-    console.log("TCL: hndleSubmitAJAX -> response", response);
-    response.blob().then(function (myBlob) {
-    console.log("TCL: hndleSubmitAJAX -> myBlob", myBlob)
-      saveAs(myBlob, "download.zip");
-    });
+    var request = new XMLHttpRequest();
+    request.open("POST", "DocumentSignature", true);
+    request.setRequestHeader('Content-Typexxxx', 'multipart/form-data');
+    request.send(formData);
 
-    // var request = new XMLHttpRequest();
-    // request.open("POST", "DocumentSignature", true);
-    // request.setRequestHeader('Content-Typexxxx', 'multipart/form-data');
+    request.onload = function() {
+      // request.response.blob().then(function(myBlob) {
+      //   saveAsFunc(myBlob,'download.zip');
+      // });
+      console.log("TCL: request.onload -> request.response1", request.response);
+      getZip(request.response);
 
-    // request.send(formData);
-    // request.onload = function() {
-    //   request.response.blob().then(function(myBlob) {
-    //     saveAsFunc(myBlob,'download.zip');
-    //   });
-    //   console.log("TCL: request.onload -> request.response", request.response)
-
-    // };
+    };
     e.target.reset();
   };
 
@@ -59,10 +48,9 @@ const SignaturePage = () => {
 
   return (
     <Form
-      // method="post"
-      // encType="multipart/form-data"
-      // action="DocumentSignature"
-      onSubmit={(e) => hndleSubmitAJAX(e)}
+      onSubmit={async (e) => {        
+        await hadleSubmitAJAX(e);
+      }}
     >
       <Form.Group as={Row}>
         <Form.Label as="legend" column sm={2}>
