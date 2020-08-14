@@ -5,19 +5,20 @@ import { saveAs } from "file-saver";
 const SignaturePage = () => {
   const [isOneSignature, setIsOneSignature] = useState(true);
 
-   const hadleSubmitAJAX = (e) => {
+  const hadleSubmitAJAX = (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
 
-    var request = new XMLHttpRequest();
+    let request = new XMLHttpRequest();
     request.open("POST", "DocumentSignature", true);
-    request.setRequestHeader('Content-Typexxxx', 'multipart/form-data');
+    request.setRequestHeader("Content-Typexxxx", "multipart/form-data");
+    request.onload = async () => {
+      let response = await fetch("DocumentSignature?fileGuid=" + request.response);
+      let blob = await response.blob()
+      saveAs(blob, "docs.zip");
+    };
     request.send(formData);
 
-    request.onload = function(args) {
-      console.log("TCL: request.onload -> args", args)
-      console.log("TCL: request.onload -> request.response1", request.response);
-    };
     e.target.reset();
   };
 
@@ -30,7 +31,7 @@ const SignaturePage = () => {
 
   return (
     <Form
-      onSubmit={async (e) => {        
+      onSubmit={async (e) => {
         await hadleSubmitAJAX(e);
       }}
     >

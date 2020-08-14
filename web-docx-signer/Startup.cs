@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using web_docx_signer.Services;
 
 namespace web_docx_signer
 {
@@ -33,6 +34,7 @@ namespace web_docx_signer
             // Register the Swagger generator, defining 1 or more Swagger documents
             services.AddSwaggerGen();
             services.AddSingleton<ISignature, Signature>();
+            services.AddSingleton<ITempDataService, TempDataService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

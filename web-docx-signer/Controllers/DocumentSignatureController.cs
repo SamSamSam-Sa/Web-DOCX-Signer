@@ -6,26 +6,30 @@ using Microsoft.AspNetCore.Mvc;
 using DocxSignature;
 using System.IO.Compression;
 using System;
+using web_docx_signer.Services;
+using System.Runtime.InteropServices.ComTypes;
 
 namespace web_docx_signer.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class DocumentSignatureController : Controller
+    public class DocumentSignatureController : ControllerBase
     {
         IWebHostEnvironment _appEnvironment;
         private ISignature _signature;
+        private ITempDataService _tempDataService;
 
-        public DocumentSignatureController(IWebHostEnvironment appEnvironment, ISignature signature)
+        public DocumentSignatureController(IWebHostEnvironment appEnvironment, ISignature signature, ITempDataService tempDataService)
         {
             _appEnvironment = appEnvironment;
             _signature = signature;
+            _tempDataService = tempDataService;
         }
 
         [HttpPost]
         public async Task<string> SignDocuments([FromForm] IFormFileCollection uploads, [FromForm] string firstName, [FromForm] string secondName)
         {
-            var filename = Guid.NewGuid().ToString();
+            var fileGuid = Guid.NewGuid();
             using (var archiveMemoryStream = new MemoryStream())
             {
                 using (var archive = new ZipArchive(archiveMemoryStream, ZipArchiveMode.Create, true))
@@ -52,20 +56,19 @@ namespace web_docx_signer.Controllers
                 }
 
                 archiveMemoryStream.Seek(0, SeekOrigin.Begin);
-                var temp = Convert.ToBase64String(archiveMemoryStream.ToArray());
-                TempData[filename] = temp;
+                _tempDataService.Add(fileGuid, archiveMemoryStream.ToArray());
             }
 
-            return filename;
+            return fileGuid.ToString();
         }
 
         [HttpGet]
-        public virtual ActionResult Download(string fileGuid)
+        public ActionResult Download(string fileGuid)
         {
-            if (TempData[fileGuid] != null)
+            var guid = new Guid(fileGuid);
+            if (_tempDataService.IsExist(guid))
             {
-                byte[] data = Convert.FromBase64String((string)TempData[fileGuid]);
-                return File(data, "application/zip", "SignedFiles.zip");
+                return File(_tempDataService.Get(guid), "application/zip");
             }
             else
             {
