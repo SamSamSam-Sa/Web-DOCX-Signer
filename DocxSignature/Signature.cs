@@ -177,7 +177,8 @@ namespace DocxSignature
             return new Paragraph(new ParagraphProperties
             {
                 Justification = new Justification() { Val = JustificationValues.Center },
-                SpacingBetweenLines = new SpacingBetweenLines() { After = "80" }
+                SpacingBetweenLines = new SpacingBetweenLines() { After = "80" },
+                Indentation = new Indentation() { FirstLine = "0"}
             },
             new Run(new RunProperties
             {

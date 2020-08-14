@@ -4,6 +4,7 @@ import { saveAs } from "file-saver";
 
 const SignaturePage = () => {
   const [isOneSignature, setIsOneSignature] = useState(true);
+  const [isSigningInProcess, setIsSigningInProcess] = useState(false);
 
   const hadleSubmitAJAX = (e) => {
     e.preventDefault();
@@ -13,20 +14,17 @@ const SignaturePage = () => {
     request.open("POST", "DocumentSignature", true);
     request.setRequestHeader("Content-Typexxxx", "multipart/form-data");
     request.onload = async () => {
-      let response = await fetch("DocumentSignature?fileGuid=" + request.response);
-      let blob = await response.blob()
-      saveAs(blob, "docs.zip");
+      let response = await fetch(
+        "DocumentSignature?fileGuid=" + request.response
+      );
+      let blob = await response.blob();
+      saveAs(blob, "signed-docs.zip");
+      setIsSigningInProcess(false);
     };
     request.send(formData);
+    setIsSigningInProcess(true);
 
     e.target.reset();
-  };
-
-  const saveAsFunc = (responseBody) => {
-    setTimeout(() => {
-      var blob = new Blob([responseBody], { type: "application/zip" });
-      saveAs(blob);
-    }, 2000);
   };
 
   return (
@@ -37,9 +35,9 @@ const SignaturePage = () => {
     >
       <Form.Group as={Row}>
         <Form.Label as="legend" column sm={2}>
-          Выберите файлы
+          {isSigningInProcess ? "Ожидание" : "Выберите файлы"}
         </Form.Label>
-        <Form.File name="uploads" multiple />
+        <Form.File name="uploads" multiple disabled={isSigningInProcess} />
       </Form.Group>
       <Form.Group as={Row}>
         <Form.Label as="legend" column sm={2}>
@@ -49,12 +47,24 @@ const SignaturePage = () => {
           <Form.Check
             type="radio"
             label="Одна печать"
-            onChange={() => setIsOneSignature(true)}
+            checked={isOneSignature}
+            onChange={() => {
+              setIsOneSignature(true);
+              console.log(
+                "TCL: SignaturePage -> isOneSignature",
+                isOneSignature
+              );
+            }}
           />
           <Form.Check
             type="radio"
             label="Две печати"
-            onChange={() => setIsOneSignature(false)}
+            checked={!isOneSignature}
+            onChange={() => {setIsOneSignature(false);
+              console.log(
+                "TCL: SignaturePage -> isOneSignature",
+                isOneSignature
+              );}}
           />
         </Col>
       </Form.Group>
@@ -84,7 +94,9 @@ const SignaturePage = () => {
           </Col>
         </Form.Group>
       )}
-      <Button type="submit">Подписать</Button>
+      <Button type="submit" disabled={isSigningInProcess}>
+        {isSigningInProcess ? "Ожидание" : "Подписать"}
+      </Button>
     </Form>
   );
 };
